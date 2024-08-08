@@ -70,3 +70,5 @@ test_env/
 /data(old)/*.*
 /test.py
 /generation/hotpot_train_v1.1.json
+/generation/xxhotpot_train_v1.1.json
+/evaluation/qa/qa_gpt-4o-mini_results.json

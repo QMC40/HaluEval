@@ -10,7 +10,7 @@ os.environ['OPENAI_API_KEY'] = Constants.OPENAI_KEY
 
 model = "gpt-4o-mini"
 
-TEST_SIZE = 10
+TEST_SIZE = Constants.TEST_SIZE
 
 
 def get_qa_res(knowledge, question, answer1, answer2, instruction):

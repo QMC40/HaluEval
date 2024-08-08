@@ -1,16 +1,24 @@
 import json
+import spacy
+import pyLDAvis
+import argparse
+import os
+import Constants
 from nltk.tokenize import RegexpTokenizer
 from gensim.utils import simple_preprocess
 from nltk.corpus import stopwords
-import spacy
 from gensim.models import Phrases
 from gensim.models import LdaModel
 from pprint import pprint
 from gensim.corpora import Dictionary
 from pyLDAvis import gensim_models
-import pyLDAvis
-import argparse
 
+
+os.environ['OPENAI_API_KEY'] = Constants.OPENAI_KEY
+
+model = "gpt-4o-mini"
+
+TEST_SIZE = Constants.TEST_SIZE
 
 def load_qa(filename):
     text = []
@@ -111,9 +119,9 @@ def lda_model(docs, num_topics):
 
     # Set training parameters.
     num_topics = num_topics
-    chunksize = 10000
-    passes = 20
-    iterations = 800
+    chunksize = TEST_SIZE
+    passes = 2
+    iterations = 8
     eval_every = None
 
     # Make a index to word dictionary.

@@ -11,7 +11,7 @@ os.environ['OPENAI_API_KEY'] = Constants.OPENAI_KEY
 
 model = "gpt-4o-mini"
 
-TEST_SIZE = 10
+TEST_SIZE = Constants.TEST_SIZE
 
 
 def get_qa_response(question, answer, instruction):
@@ -29,21 +29,21 @@ def get_qa_response(question, answer, instruction):
         try:
             response = get_completion(message)
             break
-        except openai.error.RateLimitError:
-            print('openai.error.RateLimitError\nRetrying...')
+        except openai.RateLimitError:
+            print('openai.RateLimitError\nRetrying...')
             time.sleep(60)
-        except openai.error.ServiceUnavailableError:
-            print('openai.error.ServiceUnavailableError\nRetrying...')
+        # except openai.ServiceUnavailableError:
+        #     print('openai.ServiceUnavailableError\nRetrying...')
+        #     time.sleep(20)
+        except openai.Timeout:
+            print('openai.Timeout\nRetrying...')
             time.sleep(20)
-        except openai.error.Timeout:
-            print('openai.error.Timeout\nRetrying...')
+        except openai.APIError:
+            print('openai.APIError\nRetrying...')
             time.sleep(20)
-        except openai.error.APIError:
-            print('openai.error.APIError\nRetrying...')
-            time.sleep(20)
-        except openai.error.APIConnectionError:
-            print('openai.error.APIConnectionError\nRetrying...')
-            time.sleep(20)
+        # except openai.APIConnectionError:
+        #     print('openai.APIConnectionError\nRetrying...')
+        #     time.sleep(20)
 
     return response
 
@@ -62,32 +62,32 @@ def get_dialogue_response(model, dialog, response, instruction):
         try:
             response = get_completion(message)
             break
-        except openai.error.RateLimitError:
-            print('openai.error.RateLimitError\nRetrying...')
+        except openai.RateLimitError:
+            print('openai.RateLimitError\nRetrying...')
             time.sleep(60)
-        except openai.error.ServiceUnavailableError:
-            print('openai.error.ServiceUnavailableError\nRetrying...')
+        # except openai.ServiceUnavailableError:
+        #     print('openai.ServiceUnavailableError\nRetrying...')
+        #     time.sleep(20)
+        except openai.Timeout:
+            print('openai.Timeout\nRetrying...')
             time.sleep(20)
-        except openai.error.Timeout:
-            print('openai.error.Timeout\nRetrying...')
+        except openai.APIError:
+            print('openai.APIError\nRetrying...')
             time.sleep(20)
-        except openai.error.APIError:
-            print('openai.error.APIError\nRetrying...')
-            time.sleep(20)
-        except openai.error.APIConnectionError:
-            print('openai.error.APIConnectionError\nRetrying...')
-            time.sleep(20)
+        # except openai.APIConnectionError:
+        #     print('openai.APIConnectionError\nRetrying...')
+        #     time.sleep(20)
 
     return response
 
 
-def num_tokens_from_message(message, model="davinci"):
+def num_tokens_from_message(message, model=model):
     encoding = tiktoken.encoding_for_model(model)
     num_tokens = len(encoding.encode(message))
     return num_tokens
 
 
-def truncate_message(prompt1, prompt2, model="davinci"):
+def truncate_message(prompt1, prompt2, model=model):
     if num_tokens_from_message(prompt1 + prompt2, model) > 2033:
         truncation_length = 2033 - num_tokens_from_message(prompt2)
         while num_tokens_from_message(prompt1) > truncation_length:
@@ -110,21 +110,21 @@ def get_summarization_response(model, document, summary, instruction):
         try:
             response = get_completion(message)
             break
-        except openai.error.RateLimitError:
-            print('openai.error.RateLimitError\nRetrying...')
+        except openai.RateLimitError:
+            print('openai.RateLimitError\nRetrying...')
             time.sleep(60)
-        except openai.error.ServiceUnavailableError:
-            print('openai.error.ServiceUnavailableError\nRetrying...')
+        # except openai.ServiceUnavailableError:
+        #     print('openai.ServiceUnavailableError\nRetrying...')
+        #     time.sleep(20)
+        except openai.Timeout:
+            print('openai.Timeout\nRetrying...')
             time.sleep(20)
-        except openai.error.Timeout:
-            print('openai.error.Timeout\nRetrying...')
+        except openai.APIError:
+            print('openai.APIError\nRetrying...')
             time.sleep(20)
-        except openai.error.APIError:
-            print('openai.error.APIError\nRetrying...')
-            time.sleep(20)
-        except openai.error.APIConnectionError:
-            print('openai.error.APIConnectionError\nRetrying...')
-            time.sleep(20)
+        # except openai.APIConnectionError:
+        #     print('openai.APIConnectionError\nRetrying...')
+        #     time.sleep(20)
 
     return response
 
@@ -326,7 +326,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Hallucination Generation")
 
     parser.add_argument("--task", default="qa", help="qa, dialogue, or summarization")
-    parser.add_argument("--model", default="davinci", help="model name")
+    parser.add_argument("--model", default=model, help="model name")
     args = parser.parse_args()
 
     instruction_file = "{}/{}_evaluation_instruction.txt".format(args.task, args.task)
