@@ -1,6 +1,7 @@
 # output folder
 _output/
 
+# single files to omit
 Constants.py
 qa_one-turn_data.json
 
