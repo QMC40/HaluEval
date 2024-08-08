@@ -3,29 +3,31 @@ import openai
 import time
 import json
 import argparse
+import os
 
-openai.api_key = 'sk-'
+os.environ[
+    'OPENAI_API_KEY'] = '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'
+
+model = "gpt-4o-mini"
+
+TEST_SIZE = 10
+
 
 def get_qa_res(knowledge, question, answer1, answer2, instruction):
-
     message = [
-        {"role": "system", "content":"You are an answer judge. You MUST select an answer from the provided two answers. The answer you provided is \"The best answer is Answer 1.\" or \"The best answer is Answer 2.\""},
+        {"role": "system",
+         "content": "You are an answer judge. You MUST select an answer from the provided two answers. The answer you provided is \"The best answer is Answer 1.\" or \"The best answer is Answer 2.\""},
         {"role": "user", "content": instruction +
-                                    "\n\n#Knowledge#: " + knowledge +
-                                    "\n#Question#: " + question +
-                                    "\n#Answer 1#: " + answer1 +
-                                    "\n#Answer 2#: " + answer2 +
-                                    "\n#Your Choice#: "} 
+            "\n\n#Knowledge#: " + knowledge +
+            "\n#Question#: " + question +
+            "\n#Answer 1#: " + answer1 +
+            "\n#Answer 2#: " + answer2 +
+            "\n#Your Choice#: "}
     ]
 
     while True:
         try:
-            res = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=message,
-                temperature=0.0,
-                max_tokens=256
-            )
+            res = get_completion(message)
             break
         except openai.error.RateLimitError:
             print('openai.error.RateLimitError\nRetrying...')
@@ -42,21 +44,21 @@ def get_qa_res(knowledge, question, answer1, answer2, instruction):
         except openai.error.APIConnectionError:
             print('openai.error.APIConnectionError\nRetrying...')
             time.sleep(20)
-    
-    
+
     # print(res['choices'][0]['message']['content'])
     return res['choices'][0]['message']['content']
 
 
 def get_dialogue_res(knowledge, dialog, response1, response2, instruction):
     message = [
-        {"role": "system", "content": "You are a response judge. You MUST select an response from the provided two responses. Your choice MUST be \"The best response is Response 1.\" or \"The best response is Response 2.\""},
+        {"role": "system",
+         "content": "You are a response judge. You MUST select an response from the provided two responses. Your choice MUST be \"The best response is Response 1.\" or \"The best response is Response 2.\""},
         {"role": "user", "content": instruction +
-                                    "\n\n#Knowledge#: " + knowledge +
-                                    "\n#Dialogue History#: " + dialog +
-                                    "\n#Response 1#: " + response1 +
-                                    "\n#Response 2#: " + response2 +
-                                    "\n#Your Choice#: "}
+            "\n\n#Knowledge#: " + knowledge +
+            "\n#Dialogue History#: " + dialog +
+            "\n#Response 1#: " + response1 +
+            "\n#Response 2#: " + response2 +
+            "\n#Your Choice#: "}
     ]
 
     while True:
@@ -90,12 +92,13 @@ def get_dialogue_res(knowledge, dialog, response1, response2, instruction):
 
 def get_summarization_res(document, summary1, summary2, instruction):
     message = [
-        {"role": "system", "content": "You are a summary judge. You have to select a summary from the provided two summaris. The answer you provided must be \"The best summary is Summary 1.\" or \"The best summary is Summary 2.\""},
+        {"role": "system",
+         "content": "You are a summary judge. You have to select a summary from the provided two summaris. The answer you provided must be \"The best summary is Summary 1.\" or \"The best summary is Summary 2.\""},
         {"role": "user", "content": instruction +
-                                    "\n\n#Document#: " + document +
-                                    "\n#Summary 1#: " + summary1 +
-                                    "\n#Summary 2#: " + summary2 +
-                                    "\n#Your Choice#: "}
+            "\n\n#Document#: " + document +
+            "\n#Summary 1#: " + summary1 +
+            "\n#Summary 2#: " + summary2 +
+            "\n#Your Choice#: "}
     ]
 
     while True:
@@ -138,7 +141,7 @@ def filtering_qa_dataset(file1, file2, instruction, output_path):
         for line in f:
             data2.append(json.loads(line))
 
-        assert(len(data1) == len(data2))
+        assert (len(data1) == len(data2))
         for i in range(len(data1)):
             knowledge = data1[i]["knowledge"]
             question = data1[i]["question"]
@@ -154,20 +157,24 @@ def filtering_qa_dataset(file1, file2, instruction, output_path):
             else:
                 ans = get_qa_res(knowledge, question, answer1, answer2, instruction)
                 k = 0
-                while("The best answer is Answer 1" not in ans and "The best answer is Answer 2" not in ans) or ("The best answer is Answer 1" in ans and "The best answer is Answer 2" in ans):
-                    assert(k<5)
+                while ("The best answer is Answer 1" not in ans and "The best answer is Answer 2" not in ans) or (
+                        "The best answer is Answer 1" in ans and "The best answer is Answer 2" in ans):
+                    assert (k < 5)
                     ans = get_qa_res(knowledge, question, answer1, answer2, instruction)
-                    k = k+1
+                    k = k + 1
 
             if ("1" in ans and "2" in ans) or ("1" not in ans and "2" not in ans):
-                answer = {"knowledge": knowledge, "question": question, "right_answer": right_ans, "hallucinated_answer": "failed!"}
+                answer = {"knowledge": knowledge, "question": question, "right_answer": right_ans,
+                          "hallucinated_answer": "failed!"}
             elif "1" in ans:
-                answer = {"knowledge": knowledge, "question": question, "right_answer": right_ans, "hallucinated_answer": answer1}
+                answer = {"knowledge": knowledge, "question": question, "right_answer": right_ans,
+                          "hallucinated_answer": answer1}
             elif "2" in ans:
-                answer = {"knowledge": knowledge, "question": question, "right_answer": right_ans, "hallucinated_answer": answer2}
+                answer = {"knowledge": knowledge, "question": question, "right_answer": right_ans,
+                          "hallucinated_answer": answer2}
             else:
                 answer = None
-            assert(answer is not None)
+            assert (answer is not None)
 
             dump_jsonl(answer, output_path, append=True)
             print("sample {} completed!".format(i))
@@ -202,7 +209,8 @@ def filtering_dialogue_dataset(file1, file2, instruction, output_path):
             else:
                 res = get_dialogue_res(knowledge, dialog, response1, response2, instruction)
                 k = 0
-                while (("The best response is Response 1" not in res and "The best response is Response 2" not in res) or (
+                while ((
+                               "The best response is Response 1" not in res and "The best response is Response 2" not in res) or (
                                "The best response is Response 1" in res and "The best response is Response 2" in res)):
                     assert (k < 5)
                     res = get_dialogue_res(knowledge, dialog, response1, response2, instruction)
@@ -283,11 +291,27 @@ def dump_jsonl(data, output_path, append=False):
     """
     mode = 'a+' if append else 'w'
     with open(output_path, mode, encoding='utf-8') as f:
-            json_record = json.dumps(data, ensure_ascii=False)
-            f.write(json_record + '\n')
+        json_record = json.dumps(data, ensure_ascii=False)
+        f.write(json_record + '\n')
+
+
+def get_completion(message):
+    messages = message
+    response = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        temperature=1,
+        max_tokens=256,
+        top_p=1
+    )
+    print(response.choices[0].message.content)
+    return response.choices[0].message.content
 
 
 if __name__ == '__main__':
+
+    client = openai.OpenAI()
+
     parser = argparse.ArgumentParser(description="Hallucination Generation")
 
     parser.add_argument("--task", default="qa", help="qa, dialogue, or summarization")

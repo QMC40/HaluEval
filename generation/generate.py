@@ -3,18 +3,22 @@ import time
 import json
 import argparse
 import csv
+import os
 
-openai.api_key = 'sk-'
+os.environ['OPENAI_API_KEY'] = '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'
 
+model = "gpt-4o-mini"
+
+TEST_SIZE = 10
 
 def get_qa_res(knowledge, question, answer, instruction):
     if isinstance(instruction, str):
         message = [
             {"role": "user", "content": instruction +
-                                        "\n\n#Knowledge#: " + knowledge +
-                                        "\n#Question#: " + question +
-                                        "\n#Right Answer#: " + answer +
-                                        "\n#Hallucinated Answer#: "}
+                "\n\n#Knowledge#: " + knowledge +
+                "\n#Question#: " + question +
+                "\n#Right Answer#: " + answer +
+                "\n#Hallucinated Answer#: "}
         ]
     elif isinstance(instruction, list):
         mes = [{"role": "user",
@@ -26,16 +30,10 @@ def get_qa_res(knowledge, question, answer, instruction):
         message = instruction + mes
     else:
         raise TypeError("The instruction must be str or list!")
-             
+
     while True:
         try:
-            res = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=message,
-                temperature=1,
-                max_tokens=256,
-                top_p=1
-            )
+            res = get_completion(message)
             break
         except openai.error.RateLimitError:
             print('openai.error.RateLimitError\nRetrying...')
@@ -52,20 +50,19 @@ def get_qa_res(knowledge, question, answer, instruction):
         except openai.error.APIConnectionError:
             print('openai.error.APIConnectionError\nRetrying...')
             time.sleep(20)
-    
-    
+
     # print(res['choices'][0]['message']['content'])
-    return res['choices'][0]['message']['content']
+    return res
 
 
 def get_dialogue_res(knowledge, dialog, response, instruction):
     if isinstance(instruction, str):
         message = [
             {"role": "user", "content": instruction +
-                                        "\n\n#Knowledge#: " + knowledge +
-                                        "\n#Dialogue History#: " + dialog +
-                                        "\n#True Response#: " + response +
-                                        "\n#Hallucinated Response#: "}
+                "\n\n#Knowledge#: " + knowledge +
+                "\n#Dialogue History#: " + dialog +
+                "\n#True Response#: " + response +
+                "\n#Hallucinated Response#: "}
         ]
     elif isinstance(instruction, list):
         mes = [{"role": "user",
@@ -80,13 +77,7 @@ def get_dialogue_res(knowledge, dialog, response, instruction):
 
     while True:
         try:
-            res = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=message,
-                temperature=1,
-                max_tokens=256,
-                top_p=1
-            )
+            res = get_completion(message)
             break
         except openai.error.RateLimitError:
             print('openai.error.RateLimitError\nRetrying...')
@@ -112,9 +103,9 @@ def get_summarization_res(text, summary, instruction):
     if isinstance(instruction, str):
         message = [
             {"role": "user", "content": instruction +
-                                        "\n\n#Document#: " + text +
-                                        "\n#Right Summary#: " + summary +
-                                        "\n#Hallucinated Summary#: "}
+                "\n\n#Document#: " + text +
+                "\n#Right Summary#: " + summary +
+                "\n#Hallucinated Summary#: "}
         ]
     elif isinstance(instruction, list):
         mes = [{"role": "user",
@@ -128,13 +119,7 @@ def get_summarization_res(text, summary, instruction):
 
     while True:
         try:
-            res = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=message,
-                temperature=1,
-                max_tokens=256,
-                top_p=1
-            )
+            res = get_completion(message)
             break
         except openai.error.RateLimitError:
             print('openai.error.RateLimitError\nRetrying...')
@@ -160,7 +145,7 @@ def generate_qa_dataset(seed_data, instruction, output_path):
     with open(seed_data, 'r', encoding="utf-8") as f:
         text = json.load(f)
 
-        for i in range(10000):
+        for i in range(TEST_SIZE):
             question = text[i]['question']
             answer = text[i]['answer']
             supporting_facts = text[i]['supporting_facts']
@@ -183,7 +168,7 @@ def generate_dialogue_dataset(seed_data, instruction, output_path):
         i = 0
         data = csv.DictReader(f)
         for r in data:
-            if i >= 10000:
+            if i >= TEST_SIZE:
                 break
             r = eval(r['Messages'])
             dialog = ""
@@ -211,7 +196,8 @@ def generate_dialogue_dataset(seed_data, instruction, output_path):
             if knowledge == "" or dialog == "" or response == "":
                 continue
             res = get_dialogue_res(knowledge, dialog, response, instruction)
-            data = {"knowledge": knowledge, "dialogue_history": dialog, "right_response": response, "hallucinated_response": res}
+            data = {"knowledge": knowledge, "dialogue_history": dialog, "right_response": response,
+                    "hallucinated_response": res}
             dump_jsonl(data, output_path, append=True)
             i = i + 1
             print("sample {} completed!".format(i))
@@ -222,7 +208,7 @@ def generate_summarization_dataset(seed_data, instruction, output_path):
         data = f.readlines()
         text = [json.loads(d) for d in data]
 
-        for i in range(10000):
+        for i in range(TEST_SIZE):
             document = text[i]["document"]
             summary = text[i]["summary"]
             sum = get_summarization_res(document, summary, instruction)
@@ -237,16 +223,32 @@ def dump_jsonl(data, output_path, append=False):
     """
     mode = 'a+' if append else 'w'
     with open(output_path, mode, encoding='utf-8') as f:
-            json_record = json.dumps(data, ensure_ascii=False)
-            f.write(json_record + '\n')
+        json_record = json.dumps(data, ensure_ascii=False)
+        f.write(json_record + '\n')
+
+
+def get_completion(message):
+    messages = message
+    response = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        temperature=1,
+        max_tokens=256,
+        top_p=1
+    )
+    print(response.choices[0].message.content)
+    return response.choices[0].message.content
 
 
 if __name__ == '__main__':
+
+    client = openai.OpenAI()
+
     parser = argparse.ArgumentParser(description="Hallucination Generation")
 
     parser.add_argument("--seed_data", default="hotpot_train_v1.1.json", help="the original dataset file")
     parser.add_argument("--task", default="qa", help="qa, dialogue, or summarization")
-    parser.add_argument("--strategy",default="one-turn", help="one-turn or multi-turn")
+    parser.add_argument("--strategy", default="one-turn", help="one-turn or multi-turn")
     args = parser.parse_args()
 
     seed_data = args.seed_data
