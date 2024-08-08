@@ -3,9 +3,10 @@ import time
 import json
 import argparse
 import csv
+import Constants
 import os
 
-os.environ['OPENAI_API_KEY'] = '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'
+os.environ['OPENAI_API_KEY'] = Constants.OPENAI_KEY
 
 model = "gpt-4o-mini"
 

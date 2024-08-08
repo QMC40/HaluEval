@@ -1,0 +1,67 @@
+# output folder
+_output/
+
+Constants.py
+qa_one-turn_data.json
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# pyenv
+.python-version
+
+# testing environment folder
+myenv/
+
+# csv files
+*.csv
+
+# pipenv
+Pipfile.lock
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Pyre type checker
+.pyre/
+
+# PyCharm
+.idea/
+.idea/*.xml
+*.iml
+out/
+
+# Other config files
+*.toml
+*.ini
+
+# Local History for IntelliJ-based IDEs
+.idea/.idea/
+.idea/.local_history/
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+.idea/libraries
+.idea/modules.xml
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.nfs*
+
+# Test environments
+test_env/
