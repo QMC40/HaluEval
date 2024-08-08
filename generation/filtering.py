@@ -45,8 +45,8 @@ def get_qa_res(knowledge, question, answer1, answer2, instruction):
             print('openai.error.APIConnectionError\nRetrying...')
             time.sleep(20)
 
-    # print(res['choices'][0]['message']['content'])
-    return res['choices'][0]['message']['content']
+    # print(res)
+    return res
 
 
 def get_dialogue_res(knowledge, dialog, response1, response2, instruction):

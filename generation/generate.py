@@ -12,14 +12,15 @@ model = "gpt-4o-mini"
 
 TEST_SIZE = 10
 
+
 def get_qa_res(knowledge, question, answer, instruction):
     if isinstance(instruction, str):
         message = [
             {"role": "user", "content": instruction +
-                "\n\n#Knowledge#: " + knowledge +
-                "\n#Question#: " + question +
-                "\n#Right Answer#: " + answer +
-                "\n#Hallucinated Answer#: "}
+                                        "\n\n#Knowledge#: " + knowledge +
+                                        "\n#Question#: " + question +
+                                        "\n#Right Answer#: " + answer +
+                                        "\n#Hallucinated Answer#: "}
         ]
     elif isinstance(instruction, list):
         mes = [{"role": "user",
@@ -52,7 +53,7 @@ def get_qa_res(knowledge, question, answer, instruction):
             print('openai.error.APIConnectionError\nRetrying...')
             time.sleep(20)
 
-    # print(res['choices'][0]['message']['content'])
+    # print(res)
     return res
 
 
@@ -60,10 +61,10 @@ def get_dialogue_res(knowledge, dialog, response, instruction):
     if isinstance(instruction, str):
         message = [
             {"role": "user", "content": instruction +
-                "\n\n#Knowledge#: " + knowledge +
-                "\n#Dialogue History#: " + dialog +
-                "\n#True Response#: " + response +
-                "\n#Hallucinated Response#: "}
+                                        "\n\n#Knowledge#: " + knowledge +
+                                        "\n#Dialogue History#: " + dialog +
+                                        "\n#True Response#: " + response +
+                                        "\n#Hallucinated Response#: "}
         ]
     elif isinstance(instruction, list):
         mes = [{"role": "user",
@@ -104,9 +105,9 @@ def get_summarization_res(text, summary, instruction):
     if isinstance(instruction, str):
         message = [
             {"role": "user", "content": instruction +
-                "\n\n#Document#: " + text +
-                "\n#Right Summary#: " + summary +
-                "\n#Hallucinated Summary#: "}
+                                        "\n\n#Document#: " + text +
+                                        "\n#Right Summary#: " + summary +
+                                        "\n#Hallucinated Summary#: "}
         ]
     elif isinstance(instruction, list):
         mes = [{"role": "user",
@@ -249,7 +250,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--seed_data", default="hotpot_train_v1.1.json", help="the original dataset file")
     parser.add_argument("--task", default="qa", help="qa, dialogue, or summarization")
-    parser.add_argument("--strategy", default="one-turn", help="one-turn or multi-turn")
+    parser.add_argument("--strategy", default="multi-turn", help="one-turn or multi-turn")
     args = parser.parse_args()
 
     seed_data = args.seed_data
