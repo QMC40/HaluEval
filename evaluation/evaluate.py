@@ -24,28 +24,10 @@ def get_qa_response(question, answer, instruction):
                                     "\n#Your Judgement#: "}
     ]
 
+    res = get_completion(message)
 
-    while True:
-        try:
-            response = get_completion(message)
-            break
-        except openai.RateLimitError:
-            print('openai.RateLimitError\nRetrying...')
-            time.sleep(60)
-        # except openai.ServiceUnavailableError:
-        #     print('openai.ServiceUnavailableError\nRetrying...')
-        #     time.sleep(20)
-        except openai.Timeout:
-            print('openai.Timeout\nRetrying...')
-            time.sleep(20)
-        except openai.APIError:
-            print('openai.APIError\nRetrying...')
-            time.sleep(20)
-        # except openai.APIConnectionError:
-        #     print('openai.APIConnectionError\nRetrying...')
-        #     time.sleep(20)
-
-    return response
+    # print(res)
+    return res
 
 
 def get_dialogue_response(model, dialog, response, instruction):
@@ -58,27 +40,11 @@ def get_dialogue_response(model, dialog, response, instruction):
                                     "\n#Your Judgement#: "}
     ]
     prompt = instruction + "\n\n#Dialogue History#: " + dialog + "\n#Response#: " + response + "\n#Your Judgement#:"
-    while True:
-        try:
-            response = get_completion(message)
-            break
-        except openai.RateLimitError:
-            print('openai.RateLimitError\nRetrying...')
-            time.sleep(60)
-        # except openai.ServiceUnavailableError:
-        #     print('openai.ServiceUnavailableError\nRetrying...')
-        #     time.sleep(20)
-        except openai.Timeout:
-            print('openai.Timeout\nRetrying...')
-            time.sleep(20)
-        except openai.APIError:
-            print('openai.APIError\nRetrying...')
-            time.sleep(20)
-        # except openai.APIConnectionError:
-        #     print('openai.APIConnectionError\nRetrying...')
-        #     time.sleep(20)
 
-    return response
+    res = get_completion(message)
+
+    # print(res)
+    return res
 
 
 def num_tokens_from_message(message, model=model):
@@ -106,27 +72,10 @@ def get_summarization_response(model, document, summary, instruction):
                                     "\n#Your Judgement#: "}
     ]
 
-    while True:
-        try:
-            response = get_completion(message)
-            break
-        except openai.RateLimitError:
-            print('openai.RateLimitError\nRetrying...')
-            time.sleep(60)
-        # except openai.ServiceUnavailableError:
-        #     print('openai.ServiceUnavailableError\nRetrying...')
-        #     time.sleep(20)
-        except openai.Timeout:
-            print('openai.Timeout\nRetrying...')
-            time.sleep(20)
-        except openai.APIError:
-            print('openai.APIError\nRetrying...')
-            time.sleep(20)
-        # except openai.APIConnectionError:
-        #     print('openai.APIConnectionError\nRetrying...')
-        #     time.sleep(20)
+    res = get_completion(message)
 
-    return response
+    # print(res)
+    return res
 
 
 def evaluation_qa_dataset(file, instruction, output_path):
@@ -306,15 +255,31 @@ def dump_jsonl(data, output_path, append=False):
         f.write(json_record + '\n')
 
 
-def get_completion(message):
-    messages = message
-    response = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        temperature=1,
-        max_tokens=256,
-        top_p=1
-    )
+def get_completion(messages):
+
+    while True:
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=1,
+                max_tokens=256,
+                top_p=1
+            )
+            break
+        except openai.APIConnectionError:
+            print('openai.APIConnectionError\nRetrying...')
+            time.sleep(20)
+        except openai.RateLimitError:
+            print('openai.RateLimitError\nRetrying...')
+            time.sleep(60)
+        except openai.Timeout:
+            print('openai.Timeout\nRetrying...')
+            time.sleep(20)
+        except openai.APIError:
+            print('openai.APIError\nRetrying...')
+            time.sleep(20)
+
     print(response.choices[0].message.content)
     return response.choices[0].message.content
 
