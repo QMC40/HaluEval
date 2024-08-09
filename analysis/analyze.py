@@ -13,12 +13,12 @@ from pprint import pprint
 from gensim.corpora import Dictionary
 from pyLDAvis import gensim_models
 
-
 os.environ['OPENAI_API_KEY'] = Constants.OPENAI_KEY
 
 model = "gpt-4o-mini"
 
 TEST_SIZE = Constants.TEST_SIZE
+
 
 def load_qa(filename):
     text = []
@@ -27,11 +27,12 @@ def load_qa(filename):
         for line in f:
             sample = json.loads(line)
             if "knowledge" in sample:
-                text.append(sample["knowledge"] +" "+ sample["question"])
+                text.append(sample["knowledge"] + " " + sample["question"])
                 if sample["ground_truth"] == 'Yes' and sample["judgement"] == 'No':
-                    failed_text.append(sample["knowledge"] +" "+ sample["question"])
-                
+                    failed_text.append(sample["knowledge"] + " " + sample["question"])
+
     return text, failed_text
+
 
 def load_dialog(filename):
     text = []
@@ -40,11 +41,12 @@ def load_dialog(filename):
         for line in f:
             sample = json.loads(line)
             if "knowledge" in sample:
-                text.append(sample["knowledge"] +" "+ sample["dialogue_history"])
+                text.append(sample["knowledge"] + " " + sample["dialogue_history"])
                 if sample["ground_truth"] == 'Yes' and sample["judgement"] == 'No':
-                    failed_text.append(sample["knowledge"] +" "+ sample["dialogue_history"])
-    
+                    failed_text.append(sample["knowledge"] + " " + sample["dialogue_history"])
+
     return text, failed_text
+
 
 def load_summary(filename):
     text = []
@@ -56,8 +58,9 @@ def load_summary(filename):
                 text.append(sample["summary"])
                 if sample['ground_truth'] == 'Yes' and sample['judgement'] == 'No':
                     failed_text.append(sample["summary"])
-    
+
     return text, failed_text
+
 
 def load_general(filename):
     text = []
@@ -65,11 +68,12 @@ def load_general(filename):
     with open(filename, 'r', encoding='utf-8') as f:
         for line in f:
             sample = json.loads(line)
-            text.append(sample["user_query"] +" "+ sample["chatgpt_response"])
-            if "hallucination" in sample and sample["hallucination"]=="yes":
-                failed_text.append(sample["user_query"] +" "+ sample["chatgpt_response"])
-    
+            text.append(sample["user_query"] + " " + sample["chatgpt_response"])
+            if "hallucination" in sample and sample["hallucination"] == "yes":
+                failed_text.append(sample["user_query"] + " " + sample["chatgpt_response"])
+
     return text, failed_text
+
 
 def process_text(docs):
     tokenizer = RegexpTokenizer(r'\w+')
@@ -88,7 +92,7 @@ def process_text(docs):
     new_stop_words = ['year', 'new', 'woman', 'man', 'women', 'years', 'time', 'people', 'day', 'days']
     stop_words.extend(new_stop_words)
     docs = [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in docs]
-    
+
     # Lemmatize the documents.
     docs = lemmatization(docs, allowed_postags=['NOUN', 'ADJ'])
 
@@ -101,13 +105,15 @@ def process_text(docs):
                 docs[idx].append(token)
     return docs
 
+
 def lemmatization(texts, allowed_postags=['NOUN', 'ADJ']):
     nlp = spacy.load('en_core_web_sm', disable=['parser', 'ner'])
     texts_out = []
     for sent in texts:
-        doc = nlp(" ".join(sent)) 
+        doc = nlp(" ".join(sent))
         texts_out.append([token.lemma_ for token in doc if token.pos_ in allowed_postags])
     return texts_out
+
 
 def lda_model(docs, num_topics):
     dictionary = Dictionary(docs)
@@ -126,6 +132,7 @@ def lda_model(docs, num_topics):
 
     # Make a index to word dictionary.
     temp = dictionary[0]
+    print("here")
     id2word = dictionary.id2token
 
     model = LdaModel(
@@ -153,9 +160,10 @@ def lda_model(docs, num_topics):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="LDA cluster for topics")
 
-    parser.add_argument("--result", default="", help="the dataset file path")
+    parser.add_argument("--result", default="../evaluation/qa/qa_gpt-3.5-turbo_result.json",
+                        help="the dataset file path")
     parser.add_argument("--task", default="qa", help="qa, dialogue, summarization or general")
-    parser.add_argument("--category",default="all", choices=['all', 'failed'], help="all or failed data")
+    parser.add_argument("--category", default="all", choices=['all', 'failed'], help="all or failed data")
     args = parser.parse_args()
 
     if args.task == 'qa':

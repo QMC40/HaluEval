@@ -67,8 +67,8 @@ $RECYCLE.BIN/
 # Test environments
 test_env/
 /generation/*.tgz
+/generation/qa/*.json
 /data(old)/*.*
 /test.py
 /generation/hotpot_train_v1.1.json
-/generation/xxhotpot_train_v1.1.json
 /evaluation/qa/qa_gpt-4o-mini_results.json

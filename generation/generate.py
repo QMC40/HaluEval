@@ -33,25 +33,7 @@ def get_qa_res(knowledge, question, answer, instruction):
     else:
         raise TypeError("The instruction must be str or list!")
 
-    while True:
-        try:
-            res = get_completion(message)
-            break
-        except openai.error.RateLimitError:
-            print('openai.error.RateLimitError\nRetrying...')
-            time.sleep(60)
-        except openai.error.ServiceUnavailableError:
-            print('openai.error.ServiceUnavailableError\nRetrying...')
-            time.sleep(20)
-        except openai.error.Timeout:
-            print('openai.error.Timeout\nRetrying...')
-            time.sleep(20)
-        except openai.error.APIError:
-            print('openai.error.APIError\nRetrying...')
-            time.sleep(20)
-        except openai.error.APIConnectionError:
-            print('openai.error.APIConnectionError\nRetrying...')
-            time.sleep(20)
+    res = get_completion(message)
 
     # print(res)
     return res
@@ -77,28 +59,10 @@ def get_dialogue_res(knowledge, dialog, response, instruction):
     else:
         raise TypeError("The instruction must be str or list!")
 
-    while True:
-        try:
-            res = get_completion(message)
-            break
-        except openai.error.RateLimitError:
-            print('openai.error.RateLimitError\nRetrying...')
-            time.sleep(60)
-        except openai.error.ServiceUnavailableError:
-            print('openai.error.ServiceUnavailableError\nRetrying...')
-            time.sleep(20)
-        except openai.error.Timeout:
-            print('openai.error.Timeout\nRetrying...')
-            time.sleep(20)
-        except openai.error.APIError:
-            print('openai.error.APIError\nRetrying...')
-            time.sleep(20)
-        except openai.error.APIConnectionError:
-            print('openai.error.APIConnectionError\nRetrying...')
-            time.sleep(20)
+    res = get_completion(message)
 
-    # print(res['choices'][0]['message']['content'])
-    return res['choices'][0]['message']['content']
+    # print(res)
+    return res
 
 
 def get_summarization_res(text, summary, instruction):
@@ -119,28 +83,10 @@ def get_summarization_res(text, summary, instruction):
     else:
         raise TypeError("The instruction must be str or list!")
 
-    while True:
-        try:
-            res = get_completion(message)
-            break
-        except openai.error.RateLimitError:
-            print('openai.error.RateLimitError\nRetrying...')
-            time.sleep(60)
-        except openai.error.ServiceUnavailableError:
-            print('openai.error.ServiceUnavailableError\nRetrying...')
-            time.sleep(20)
-        except openai.error.Timeout:
-            print('openai.error.Timeout\nRetrying...')
-            time.sleep(20)
-        except openai.error.APIError:
-            print('openai.error.APIError\nRetrying...')
-            time.sleep(20)
-        except openai.error.APIConnectionError:
-            print('openai.error.APIConnectionError\nRetrying...')
-            time.sleep(20)
+    res = get_completion(message)
 
-    # print(res['choices'][0]['message']['content'])
-    return res['choices'][0]['message']['content']
+    # print(res)
+    return res
 
 
 def generate_qa_dataset(seed_data, instruction, output_path):
@@ -229,15 +175,31 @@ def dump_jsonl(data, output_path, append=False):
         f.write(json_record + '\n')
 
 
-def get_completion(message):
-    messages = message
-    response = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        temperature=1,
-        max_tokens=256,
-        top_p=1
-    )
+def get_completion(messages):
+
+    while True:
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=1,
+                max_tokens=256,
+                top_p=1
+            )
+            break
+        except openai.APIConnectionError:
+            print('openai.APIConnectionError\nRetrying...')
+            time.sleep(20)
+        except openai.RateLimitError:
+            print('openai.RateLimitError\nRetrying...')
+            time.sleep(60)
+        except openai.Timeout:
+            print('openai.Timeout\nRetrying...')
+            time.sleep(20)
+        except openai.APIError:
+            print('openai.APIError\nRetrying...')
+            time.sleep(20)
+
     print(response.choices[0].message.content)
     return response.choices[0].message.content
 
@@ -250,7 +212,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--seed_data", default="hotpot_train_v1.1.json", help="the original dataset file")
     parser.add_argument("--task", default="qa", help="qa, dialogue, or summarization")
-    parser.add_argument("--strategy", default="multi-turn", help="one-turn or multi-turn")
+    parser.add_argument("--strategy", default="one-turn", help="one-turn or multi-turn")
     args = parser.parse_args()
 
     seed_data = args.seed_data

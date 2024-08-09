@@ -25,25 +25,7 @@ def get_qa_res(knowledge, question, answer1, answer2, instruction):
             "\n#Your Choice#: "}
     ]
 
-    while True:
-        try:
-            res = get_completion(message)
-            break
-        except openai.error.RateLimitError:
-            print('openai.error.RateLimitError\nRetrying...')
-            time.sleep(60)
-        except openai.error.ServiceUnavailableError:
-            print('openai.error.ServiceUnavailableError\nRetrying...')
-            time.sleep(20)
-        except openai.error.Timeout:
-            print('openai.error.Timeout\nRetrying...')
-            time.sleep(20)
-        except openai.error.APIError:
-            print('openai.error.APIError\nRetrying...')
-            time.sleep(20)
-        except openai.error.APIConnectionError:
-            print('openai.error.APIConnectionError\nRetrying...')
-            time.sleep(20)
+    res = get_completion(message)
 
     # print(res)
     return res
@@ -61,33 +43,10 @@ def get_dialogue_res(knowledge, dialog, response1, response2, instruction):
             "\n#Your Choice#: "}
     ]
 
-    while True:
-        try:
-            res = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=message,
-                temperature=0.0,
-                max_tokens=256
-            )
-            break
-        except openai.error.RateLimitError:
-            print('openai.error.RateLimitError\nRetrying...')
-            time.sleep(60)
-        except openai.error.ServiceUnavailableError:
-            print('openai.error.ServiceUnavailableError\nRetrying...')
-            time.sleep(20)
-        except openai.error.Timeout:
-            print('openai.error.Timeout\nRetrying...')
-            time.sleep(20)
-        except openai.error.APIError:
-            print('openai.error.APIError\nRetrying...')
-            time.sleep(20)
-        except openai.error.APIConnectionError:
-            print('openai.error.APIConnectionError\nRetrying...')
-            time.sleep(20)
+    res = get_completion(message)
 
-    # print(res['choices'][0]['message']['content'])
-    return res['choices'][0]['message']['content']
+    # print(res)
+    return res
 
 
 def get_summarization_res(document, summary1, summary2, instruction):
@@ -101,33 +60,10 @@ def get_summarization_res(document, summary1, summary2, instruction):
             "\n#Your Choice#: "}
     ]
 
-    while True:
-        try:
-            res = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=message,
-                temperature=0.0,
-                max_tokens=256
-            )
-            break
-        except openai.error.RateLimitError:
-            print('openai.error.RateLimitError\nRetrying...')
-            time.sleep(60)
-        except openai.error.ServiceUnavailableError:
-            print('openai.error.ServiceUnavailableError\nRetrying...')
-            time.sleep(20)
-        except openai.error.Timeout:
-            print('openai.error.Timeout\nRetrying...')
-            time.sleep(20)
-        except openai.error.APIError:
-            print('openai.error.APIError\nRetrying...')
-            time.sleep(20)
-        except openai.error.APIConnectionError:
-            print('openai.error.APIConnectionError\nRetrying...')
-            time.sleep(20)
+    res = get_completion(message)
 
-    # print(res['choices'][0]['message']['content'])
-    return res['choices'][0]['message']['content']
+    # print(res)
+    return res
 
 
 def filtering_qa_dataset(file1, file2, instruction, output_path):
@@ -295,15 +231,31 @@ def dump_jsonl(data, output_path, append=False):
         f.write(json_record + '\n')
 
 
-def get_completion(message):
-    messages = message
-    response = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        temperature=1,
-        max_tokens=256,
-        top_p=1
-    )
+def get_completion(messages):
+
+    while True:
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=1,
+                max_tokens=256,
+                top_p=1
+            )
+            break
+        except openai.APIConnectionError:
+            print('openai.APIConnectionError\nRetrying...')
+            time.sleep(20)
+        except openai.RateLimitError:
+            print('openai.RateLimitError\nRetrying...')
+            time.sleep(60)
+        except openai.Timeout:
+            print('openai.Timeout\nRetrying...')
+            time.sleep(20)
+        except openai.APIError:
+            print('openai.APIError\nRetrying...')
+            time.sleep(20)
+
     print(response.choices[0].message.content)
     return response.choices[0].message.content
 
